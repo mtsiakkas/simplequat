@@ -8,7 +8,7 @@ nbbuild/
 dist/
 nbdist/
 .nb-gradle/
-
+.project
 
 ### macOS ###
 *.DS_Store
