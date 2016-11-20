@@ -34,13 +34,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define NUM_TOLERANCE 10E-8
 
-#include <math.h>
-
+#include <cmath>
 #include <iostream>
 #include <exception>
 #include <sstream>
-#include <string>
-#include <typeinfo>
+#include <string.h>
 
 class Quaternion {
 public:
@@ -73,6 +71,7 @@ public:
     Quaternion& operator/=(const float gam);
 
     float& operator[](int index);
+    float operator[](int index) const;
 
     bool operator==(const Quaternion& q) const;
     bool operator!=(const Quaternion& q) const;

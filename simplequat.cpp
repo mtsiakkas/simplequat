@@ -42,11 +42,7 @@ Quaternion::Quaternion(const Quaternion& q) {
     scalar_ = data_;
     vector_ = data_ + 1;
 
-    memcpy(data_, q.getData(), 4 * sizeof (float));
-    //    const float *qdata = q.getData();
-    //
-    //    for (int i = 0; i < 4; i++)
-    //        data_[i] = qdata[i];
+    memcpy(data_, q.data_, 4 * sizeof (float));
 }
 
 Quaternion::Quaternion(float scalar, float vector1, float vector2, float vector3) {
@@ -68,8 +64,6 @@ Quaternion::Quaternion(const float scalar, const float * vector) {
 
     *scalar_ = scalar;
     memcpy(vector_, vector, 3 * sizeof (float));
-    //    for (int i = 0; i < 3; i++)
-    //        vector_[i] = vector[i];
 }
 
 Quaternion::Quaternion(const float* data, ConstructorOptions opt) {
@@ -81,8 +75,6 @@ Quaternion::Quaternion(const float* data, ConstructorOptions opt) {
     switch (opt) {
         case QuaternionData:
             memcpy(data_, data, 4 * sizeof (float));
-            //        for (int i = 0; i < 4; i++)
-            //            data_[i] = data[i];
             break;
         case EulerAngleData:
         {
@@ -120,12 +112,7 @@ Quaternion& Quaternion::operator=(const Quaternion& q) {
     scalar_ = data_;
     vector_ = data_ + 1;
 
-    //    const float *qdata = q.getData();
-    //    
-    //    for (int i = 0; i < 4; i++)
-    //        data_[i] = qdata[i];
-
-    memcpy(data_, q.getData(), 4 * sizeof (float));
+    memcpy(data_, q.data_, 4 * sizeof (float));
 
     return *this;
 }
@@ -134,7 +121,7 @@ Quaternion Quaternion::operator+(const Quaternion& q) const {
     float newdata[4];
 
     for (int i = 0; i < 4; i++)
-        newdata[i] = data_[i] + q.getData()[i];
+        newdata[i] = data_[i] + q.data_[i];
 
     return Quaternion(newdata);
 }
@@ -143,7 +130,7 @@ Quaternion Quaternion::operator-(const Quaternion& q) const {
     float newdata[4];
 
     for (int i = 0; i < 4; i++)
-        newdata[i] = data_[i] - q.getData()[i];
+        newdata[i] = data_[i] - q.data_[i];
 
     return Quaternion(newdata);
 }
@@ -151,8 +138,6 @@ Quaternion Quaternion::operator-(const Quaternion& q) const {
 // Overload -- Multiplication by scalar
 
 Quaternion Quaternion::operator*(const float gam) const {
-    //  if (*this == Quaternion::ZERO) return Quaternion::ZERO;
-
     float newdata[4];
 
     for (int i = 0; i < 4; i++)
@@ -197,14 +182,14 @@ Quaternion Quaternion::operator/(const float gam) const {
 
 Quaternion& Quaternion::operator+=(const Quaternion& q) {
     for (int i = 0; i < 4; i++)
-        data_[i] += q.getData()[i];
+        data_[i] += q.data_[i];
 
     return *this;
 }
 
 Quaternion& Quaternion::operator-=(const Quaternion& q) {
     for (int i = 0; i < 4; i++)
-        data_[i] -= q.getData()[i];
+        data_[i] -= q.data_[i];
 
     return *this;
 }
@@ -248,6 +233,14 @@ float& Quaternion::operator[](int index) {
     }
 }
 
+float Quaternion::operator[](int index) const {
+    if (index > -1 && index < 4) {
+        return data_[index];
+    } else {
+        throw quat_exc_generic("QUATERNION::INDEX OUT OF RANGE");
+    }
+}
+
 Quaternion Quaternion::conjugate(void) const {
     float vector[3];
 
@@ -274,9 +267,9 @@ Quaternion Quaternion::operator*(const Quaternion& q) const {
         return *this;
 
     const float* q_vector = q.getVector();
-    float q_scalar = q.getScalar();
+    float q_scalar = q[0];
 
-    float scalar = *scalar_ * q.getData()[0];
+    float scalar = *scalar_ * q_scalar;
 
     for (int i = 0; i < 3; i++)
         scalar -= q_vector[i] * vector_[i];
@@ -311,7 +304,7 @@ bool Quaternion::operator!=(const Quaternion& q) const {
 }
 
 bool Quaternion::operator>(const Quaternion& q) const {
-    return this->norm() > q.norm();
+    return norm() > q.norm();
 }
 
 bool Quaternion::operator>=(const Quaternion& q) const {
@@ -322,7 +315,7 @@ bool Quaternion::operator>=(const Quaternion& q) const {
 }
 
 bool Quaternion::operator<(const Quaternion& q) const {
-    return this->norm()<q.norm();
+    return norm() < q.norm();
 }
 
 bool Quaternion::operator<=(const Quaternion& q) const {
@@ -333,17 +326,28 @@ bool Quaternion::operator<=(const Quaternion& q) const {
 }
 
 int Quaternion::relaxedCompare(const Quaternion& q, float tolerance) const {
-    if(tolerance == 0) {
-        bool geq = *this>=q;
-        bool leq = *this<=q;
-        if(geq && leq)
-            return 0;
-        return geq ? 1 : -1;
-    }
-    
-    return 0;
-}
 
+    int eq_count = 0;
+
+    for (int i = 0; i < 4; i++) {
+        if (fabs(data_[i] - q.getData()[i]) > fabs(tolerance))
+            break;
+
+        eq_count++;
+    }
+
+    if (eq_count == 4)
+        return 0;
+
+    float norm = this->norm();
+    float q_norm = q.norm();
+
+    if (fabs(norm - q_norm) <= fabs(tolerance)) {
+        return 0;
+    } else {
+        return norm > q_norm ? 1 : -1;
+    }
+}
 
 float Quaternion::norm(void) const {
     float norm = 0;
@@ -354,8 +358,7 @@ float Quaternion::norm(void) const {
 }
 
 void Quaternion::setVector(const float * vector) {
-    for (int i = 0; i < 3; i++)
-        vector_[i] = vector[i];
+    memcpy(vector_, vector_, 3 * sizeof (float));
 }
 
 std::string Quaternion::toString(void) {
