@@ -1,44 +1,39 @@
 /*
-Copyright (c) 2016, Mihalis Tsiakkas
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors
-may be used to endorse or promote products derived from this software without
-specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * The MIT License
+ *
+ * Copyright 2016 Mihalis Tsiakkas.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 
 #ifndef _QUATLIB_H_
 #define _QUATLIB_H_
 
-#define NUM_TOLERANCE 10E-8
-
 #include <cmath>
 #include <iostream>
 #include <exception>
 #include <sstream>
 #include <string.h>
+#include <type_traits>
+
+#define NUMERICAL_TOLERANCE 1E-6
 
 class Quaternion {
 public:
@@ -80,7 +75,7 @@ public:
     bool operator<(const Quaternion& q) const;
     bool operator<=(const Quaternion& q) const;
     
-    int relaxedCompare(const Quaternion& q, float tolerance = NUM_TOLERANCE) const;
+    int relaxedCompare(const Quaternion& q, float tolerance = NUMERICAL_TOLERANCE) const;
     
     Quaternion conjugate(void) const;
     Quaternion inverse(void) const;
@@ -95,8 +90,8 @@ public:
 
     float norm(void) const;
 
-    bool isNormalized(void) const { return fabs(norm() - 1) < NUM_TOLERANCE; }
-    bool isPure(void) const { return fabs(getScalar()) < NUM_TOLERANCE; }
+    bool isNormalized(void) const { return fabs(norm() - 1.0f) < NUMERICAL_TOLERANCE; }
+    bool isPure(void) const { return fabs(getScalar()) < NUMERICAL_TOLERANCE; }
 
     void setScalar(float scalar) { *(this->scalar_) = scalar; }
     void setVector(const float * vector);

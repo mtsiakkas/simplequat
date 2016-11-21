@@ -1,32 +1,27 @@
 /*
- Copyright (c) 2016, Mihalis Tsiakkas
- All rights reserved.
-
- Redistribution and use in source and binary forms, with or without modification,
- are permitted provided that the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this
- list of conditions and the following disclaimer.
-
- 2. Redistributions in binary form must reproduce the above copyright notice,
- this list of conditions and the following disclaimer in the documentation and/or
- other materials provided with the distribution.
-
- 3. Neither the name of the copyright holder nor the names of its contributors
- may be used to endorse or promote products derived from this software without
- specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
- ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * The MIT License
+ *
+ * Copyright 2016 Mihalis Tsiakkas.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
+
 
 #include "simplequat.h"
 
@@ -54,7 +49,6 @@ Quaternion::Quaternion(float scalar, float vector1, float vector2, float vector3
     vector_[0] = vector1;
     vector_[1] = vector2;
     vector_[2] = vector3;
-
 }
 
 Quaternion::Quaternion(const float scalar, const float * vector) {
@@ -86,10 +80,9 @@ Quaternion::Quaternion(const float* data, ConstructorOptions opt) {
             Quaternion qRoll(static_cast<float> (cos(roll / 2.0f)), static_cast<float> (sin(roll / 2.0f)), 0.0f, 0.0f);
             Quaternion qPitch(static_cast<float> (cos(pitch / 2.0f)), 0.0f, static_cast<float> (sin(pitch / 2.0f)), 0.0f);
             Quaternion qYaw(static_cast<float> (cos(yaw / 2.0f)), 0.0f, 0.0f, static_cast<float> (sin(yaw / 2.0f)));
-            Quaternion tmp = qRoll * qPitch*qYaw;
+            Quaternion qTmp = qRoll * qPitch * qYaw;
 
-            for (int i = 0; i < 4; i++)
-                data_[i] = tmp.getData()[i];
+            memcpy(data_, qTmp.data_, 4 * sizeof (float));
 
             break;
         }
@@ -120,8 +113,9 @@ Quaternion& Quaternion::operator=(const Quaternion& q) {
 Quaternion Quaternion::operator+(const Quaternion& q) const {
     float newdata[4];
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         newdata[i] = data_[i] + q.data_[i];
+    }
 
     return Quaternion(newdata);
 }
@@ -129,8 +123,9 @@ Quaternion Quaternion::operator+(const Quaternion& q) const {
 Quaternion Quaternion::operator-(const Quaternion& q) const {
     float newdata[4];
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         newdata[i] = data_[i] - q.data_[i];
+    }
 
     return Quaternion(newdata);
 }
@@ -140,8 +135,9 @@ Quaternion Quaternion::operator-(const Quaternion& q) const {
 Quaternion Quaternion::operator*(const float gam) const {
     float newdata[4];
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         newdata[i] = data_[i] * gam;
+    }
 
     return Quaternion(newdata);
 }
@@ -149,12 +145,8 @@ Quaternion Quaternion::operator*(const float gam) const {
 float* Quaternion::rotate3vector(const float* f) {
     if (isNormalized()) {
         float* out = new float[3];
-
         Quaternion fo = *this * Quaternion(0, f) * (this->conjugate());
-
-        const float* fov = fo.getVector();
-        for (int i = 0; i < 3; i++)
-            out[i] = fov[i];
+        memcpy(out, fo.vector_, 3 * sizeof (float));
 
         return out;
     } else {
@@ -165,38 +157,39 @@ float* Quaternion::rotate3vector(const float* f) {
 // Overload -- Division by scalar
 
 Quaternion Quaternion::operator/(const float gam) const {
-    if (*this == Quaternion::ZERO)
-        return Quaternion::ZERO;
-
     if (gam == 0) {
         throw quat_exc_division_by_zero();
     } else {
         float qdata[4];
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++) {
             qdata[i] = data_[i] / gam;
+        }
 
         return Quaternion(qdata);
     }
 }
 
 Quaternion& Quaternion::operator+=(const Quaternion& q) {
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         data_[i] += q.data_[i];
+    }
 
     return *this;
 }
 
 Quaternion& Quaternion::operator-=(const Quaternion& q) {
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         data_[i] -= q.data_[i];
+    }
 
     return *this;
 }
 
 Quaternion& Quaternion::operator*=(const float gam) {
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         data_[i] *= gam;
+    }
 
     return *this;
 }
@@ -210,17 +203,21 @@ Quaternion& Quaternion::operator/=(const float gam) {
     if (gam == 0) {
         throw quat_exc_division_by_zero();
     } else {
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++) {
             data_[i] /= gam;
+        }
         return *this;
     }
 }
 
+// Unary negation
+
 Quaternion Quaternion::operator-(void) {
     float qdata[4];
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         qdata[i] = -data_[i];
+    }
 
     return Quaternion(qdata);
 }
@@ -244,8 +241,9 @@ float Quaternion::operator[](int index) const {
 Quaternion Quaternion::conjugate(void) const {
     float vector[3];
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++) {
         vector[i] = -vector_[i];
+    }
 
     return Quaternion(*scalar_, vector);
 }
@@ -257,22 +255,14 @@ Quaternion Quaternion::inverse(void) const {
 // Overload -- Quaternion product
 
 Quaternion Quaternion::operator*(const Quaternion& q) const {
-    if ((*this == Quaternion::ZERO) || (q == Quaternion::ZERO))
-        return Quaternion::ZERO;
-
-    if (*this == Quaternion::UNIT)
-        return q;
-
-    if (q == Quaternion::UNIT)
-        return *this;
-
-    const float* q_vector = q.getVector();
+    const float* q_vector = q.vector_;
     float q_scalar = q[0];
 
     float scalar = *scalar_ * q_scalar;
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++) {
         scalar -= q_vector[i] * vector_[i];
+    }
 
     float vector[3];
 
@@ -296,7 +286,7 @@ Quaternion& Quaternion::normalize(void) {
 }
 
 bool Quaternion::operator==(const Quaternion& q) const {
-    return memcmp(data_, q.getData(), 4 * sizeof (float)) == 0;
+    return memcmp(data_, q.data_, 4 * sizeof (float)) == 0;
 }
 
 bool Quaternion::operator!=(const Quaternion& q) const {
@@ -308,10 +298,10 @@ bool Quaternion::operator>(const Quaternion& q) const {
 }
 
 bool Quaternion::operator>=(const Quaternion& q) const {
-    float norm = this->norm();
+    float norm_ = norm();
     float q_norm = q.norm();
 
-    return norm > q_norm || norm == q_norm;
+    return norm_ > q_norm || norm_ == q_norm;
 }
 
 bool Quaternion::operator<(const Quaternion& q) const {
@@ -319,54 +309,50 @@ bool Quaternion::operator<(const Quaternion& q) const {
 }
 
 bool Quaternion::operator<=(const Quaternion& q) const {
-    float norm = this->norm();
+    float norm_ = norm();
     float q_norm = q.norm();
 
-    return norm < q_norm || norm == q_norm;
+    return norm_ < q_norm || norm_ == q_norm;
 }
+
+// Relaxed comparison function
+// Inequalities evaluated based on norm()
 
 int Quaternion::relaxedCompare(const Quaternion& q, float tolerance) const {
 
     int eq_count = 0;
 
     for (int i = 0; i < 4; i++) {
-        if (fabs(data_[i] - q.getData()[i]) > fabs(tolerance))
+        if (fabs(data_[i] - q[i]) > fabs(tolerance)) {
             break;
-
+        }
         eq_count++;
     }
-
-    if (eq_count == 4)
+    if (eq_count == 4) {
         return 0;
-
-    float norm = this->norm();
-    float q_norm = q.norm();
-
-    if (fabs(norm - q_norm) <= fabs(tolerance)) {
-        return 0;
-    } else {
-        return norm > q_norm ? 1 : -1;
     }
+    return norm() > q.norm() ? 1 : -1;
 }
 
 float Quaternion::norm(void) const {
-    float norm = 0;
-    for (int i = 0; i < 4; i++)
-        norm += data_[i] * data_[i];
-
-    return sqrt(norm);
+    float norm_ = 0;
+    for (int i = 0; i < 4; i++) {
+        norm_ += data_[i] * data_[i];
+    }
+    return sqrt(norm_);
 }
 
 void Quaternion::setVector(const float * vector) {
-    memcpy(vector_, vector_, 3 * sizeof (float));
+    memcpy(vector_, vector, 3 * sizeof (float));
 }
 
 std::string Quaternion::toString(void) {
     std::stringstream ss;
 
     ss << "[";
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         ss << " " << data_[i];
+    }
     ss << " ]" << std::endl;
 
     return ss.str().c_str();
