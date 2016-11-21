@@ -1,3 +1,3 @@
 # simplequat
 
-A simple C/C++ quaternion alqebra library.
+A simple C/C++ quaternion algebra library.
