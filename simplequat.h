@@ -32,8 +32,9 @@
 #include <sstream>
 #include <string.h>
 #include <type_traits>
+#include <limits>
 
-#define NUMERICAL_TOLERANCE 1E-6
+#define NUMERICAL_TOLERANCE 1E-8
 
 class Quaternion {
 public:
@@ -43,10 +44,10 @@ public:
     };
 
     Quaternion();
-    Quaternion(const float scalar, const float * vector);
     Quaternion(const Quaternion& q);
-    Quaternion(const float scalar, float vector1, float vector2, float vector3);
-    Quaternion(const float* data, ConstructorOptions opt = QuaternionData);
+    Quaternion(const double scalar, double vector1, double vector2, double vector3);
+    template<class T> Quaternion(const double scalar, const T * vector);
+    template<class T> Quaternion(const T * data, ConstructorOptions opt = QuaternionData);
 
     ~Quaternion();
 
@@ -56,17 +57,17 @@ public:
     Quaternion operator-(const Quaternion& q) const;
     Quaternion operator-(void);
     Quaternion operator*(const Quaternion& q) const;
-    Quaternion operator*(const float gam) const;
-    Quaternion operator/(const float gam) const;
+    Quaternion operator*(const double gam) const;
+    Quaternion operator/(const double gam) const;
 
     Quaternion& operator+=(const Quaternion& q);
     Quaternion& operator-=(const Quaternion& q);
     Quaternion& operator*=(const Quaternion& q);
-    Quaternion& operator*=(const float gam);
-    Quaternion& operator/=(const float gam);
+    Quaternion& operator*=(const double gam);
+    Quaternion& operator/=(const double gam);
 
-    float& operator[](int index);
-    float operator[](int index) const;
+    double& operator[](int index);
+    double operator[](int index) const;
 
     bool operator==(const Quaternion& q) const;
     bool operator!=(const Quaternion& q) const;
@@ -75,26 +76,27 @@ public:
     bool operator<(const Quaternion& q) const;
     bool operator<=(const Quaternion& q) const;
     
-    int relaxedCompare(const Quaternion& q, float tolerance = NUMERICAL_TOLERANCE) const;
+    int relaxedCompare(const Quaternion& q, double tolerance = TOLERANCE_) const;
     
     Quaternion conjugate(void) const;
     Quaternion inverse(void) const;
     Quaternion& normalize(void);
 
-    float* rotate3vector(const float* f);
-    float* toEulerAngles(void);
+    double* rotate3vector(const double* f);
+    double* toEulerAngles(void);
 
-    float getScalar(void) const { return *scalar_; }
-    const float* getVector(void) const { return vector_; }
-    const float* getData(void) const { return data_; }
+    double getScalar(void) const { return *scalar_; }
+    const double* getVector(void) const { return vector_; }
+    const double* getData(void) const { return data_; }
 
-    float norm(void) const;
+    double norm(void) const;
 
-    bool isNormalized(void) const { return fabs(norm() - 1.0f) < NUMERICAL_TOLERANCE; }
-    bool isPure(void) const { return fabs(getScalar()) < NUMERICAL_TOLERANCE; }
+    bool isNormalized(void) const { return fabs(norm() - 1.0f) < TOLERANCE_; }
+    bool isPure(void) const { return fabs(getScalar()) < TOLERANCE_; }
 
-    void setScalar(float scalar) { *(this->scalar_) = scalar; }
-    void setVector(const float * vector);
+    void setScalar(double scalar) { *(this->scalar_) = scalar; }
+    void setVector(const double * vector);
+    static void setNumericalTolerance(double tolerance) { TOLERANCE_ = fabs(tolerance); }
 
     std::string toString(void);
     void print(void);
@@ -103,9 +105,12 @@ public:
     static const Quaternion UNIT;
 
 private:
-    float* data_; // Used to keep scalar_ and vector_ consecutive in memory
-    float* scalar_;
-    float* vector_;
+    double* data_; // Used to keep scalar_ and vector_ consecutive in memory
+    double* scalar_;
+    double* vector_;
+    
+    static double TOLERANCE_;
+    
 };
 
 // EXCEPTION CLASSES
@@ -113,7 +118,7 @@ private:
 class quat_exc_division_by_zero : public std::exception {
 public:
 
-    virtual const char* what() const throw () {
+    virtual const char* what() const throw () override {
         return "QUATERNION::DIVISION BY ZERO";
     }
 };
@@ -121,22 +126,18 @@ public:
 class quat_exc_not_normalized : public std::exception {
 public:
 
-    explicit quat_exc_not_normalized(float norm) : norm(norm) {
-    }
-
-    virtual const char* what() const throw () {
-        std::string err = "QUATERNION::NOT NORMALIZED ERR=" + \
-        std::to_string(fabs(norm - 1));
+    virtual const char* what() const throw () override {
+        std::string err = "QUATERNION::NOT NORMALIZED ERR";
         return err.c_str();
     }
 private:
-    float norm;
+    double norm;
 };
 
 class quat_exc_invalid_constructor_opts : public std::exception {
 public:
 
-    virtual const char* what() const throw () {
+    virtual const char* what() const throw () override {
         std::string err = "QUATERNION::INVALID CONSTRUCTOR OPTIONS";
         return err.c_str();
     }
@@ -148,7 +149,7 @@ public:
     explicit quat_exc_generic(std::string err) : err(err) {
     }
 
-    virtual const char* what() const throw () {
+    virtual const char* what() const throw () override {
         return err.c_str();
     }
 private:
