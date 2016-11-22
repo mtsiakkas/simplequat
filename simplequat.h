@@ -46,9 +46,12 @@ public:
     Quaternion();
     Quaternion(const Quaternion& q);
     Quaternion(const double scalar, double vector1, double vector2, double vector3);
-    template<class T> Quaternion(const double scalar, const T * vector);
-    template<class T> Quaternion(const T * data, ConstructorOptions opt = QuaternionData);
 
+    Quaternion(const double scalar, const float * vector);
+    Quaternion(const double scalar, const double * vector);
+    Quaternion(const float * data, ConstructorOptions opt = QuaternionData);
+    Quaternion(const double * data, ConstructorOptions opt = QuaternionData);
+    
     ~Quaternion();
 
     Quaternion& operator=(const Quaternion& q);
@@ -82,7 +85,7 @@ public:
     Quaternion inverse(void) const;
     Quaternion& normalize(void);
 
-    double* rotate3vector(const double* f);
+    double* rotateVector(const double* v);
     double* toEulerAngles(void);
 
     double getScalar(void) const { return *scalar_; }
@@ -95,19 +98,25 @@ public:
     bool isPure(void) const { return fabs(getScalar()) < TOLERANCE_; }
 
     void setScalar(double scalar) { *(this->scalar_) = scalar; }
-    void setVector(const double * vector);
+    void setVector(const double* vector);
     static void setNumericalTolerance(double tolerance) { TOLERANCE_ = fabs(tolerance); }
 
     std::string toString(void);
     void print(void);
-
+    
+    static Quaternion eulerToQuaternion(const double* euler);
+    static Quaternion eulerToQuaternion(double roll, double pitch, double yaw);
+    static double* quaternionToEuler(const Quaternion& q);
+    
+    static double* rotateVector(const double*  v, const Quaternion& q);
+    
     static const Quaternion ZERO;
     static const Quaternion UNIT;
 
 private:
-    double* data_; // Used to keep scalar_ and vector_ consecutive in memory
-    double* scalar_;
-    double* vector_;
+    double* data_;
+    double* scalar_; // Points to first element of data_
+    double* vector_; // Points to second element of data_
     
     static double TOLERANCE_;
     

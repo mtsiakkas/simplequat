@@ -25,6 +25,7 @@
 
 #include "simplequat.h"
 
+
 const Quaternion Quaternion::ZERO(0.0f, 0.0f, 0.0f, 0.0f);
 const Quaternion Quaternion::UNIT(1.0f, 0.0f, 0.0f, 0.0f);
 double Quaternion::TOLERANCE_ = 1E-8;
@@ -52,50 +53,67 @@ Quaternion::Quaternion(double scalar, double vector1, double vector2, double vec
     vector_[2] = vector3;
 }
 
-template<class T> Quaternion::Quaternion(const double scalar, const T * vector) {
+Quaternion::Quaternion(const double scalar, const float * vector) {
     data_ = new double[4];
     scalar_ = data_;
     vector_ = data_ + 1;
 
     *scalar_ = scalar;
-    if (std::is_floating_point<T>::value && sizeof (T) == sizeof (double)) {
-        memcpy(vector_, vector, 3 * sizeof (double));
-    } else {
-        for (int i = 0; i < 3; i++) {
-            vector_[i] = static_cast<double> (vector[i]);
-        }
+
+    for (int i = 0; i < 3; i++) {
+        vector_[i] = static_cast<double> (vector[i]);
     }
 }
 
-template<class T> Quaternion::Quaternion(const T * data, ConstructorOptions opt) {
+Quaternion::Quaternion(const double scalar, const double * vector) {
+    data_ = new double[4];
+    scalar_ = data_;
+    vector_ = data_ + 1;
+
+    *scalar_ = scalar;
+
+    memcpy(vector_, vector, 3 * sizeof (double));
+}
+
+Quaternion::Quaternion(const float * data, ConstructorOptions opt) {
     data_ = new double[4];
     scalar_ = data_;
     vector_ = data_ + 1;
 
     switch (opt) {
         case QuaternionData:
-            if (std::is_floating_point<T>::value && sizeof (T) == sizeof (double)) {
-                memcpy(data_, data, 4 * sizeof (double));
-            } else {
-                for (int i = 0; i < 4; i++) {
-                    data_[i] = static_cast<double> (data[i]);
-                }
+            for (int i = 0; i < 4; i++) {
+                data_[i] = static_cast<double> (data[i]);
             }
             break;
         case EulerAngleData:
         {
-
             double roll = data[1];
             double pitch = data[2];
             double yaw = data[3];
 
-            Quaternion qRoll(static_cast<double> (cos(roll / 2.0f)), static_cast<double> (sin(roll / 2.0f)), 0.0f, 0.0f);
-            Quaternion qPitch(static_cast<double> (cos(pitch / 2.0f)), 0.0f, static_cast<double> (sin(pitch / 2.0f)), 0.0f);
-            Quaternion qYaw(static_cast<double> (cos(yaw / 2.0f)), 0.0f, 0.0f, static_cast<double> (sin(yaw / 2.0f)));
-            Quaternion qTmp = qRoll * qPitch * qYaw;
+            memcpy(data_, eulerToQuaternion(roll, pitch, yaw).data_, 4 * sizeof (double));
 
-            memcpy(data_, qTmp.data_, 4 * sizeof (double));
+            break;
+        }
+        default:
+            throw quat_exc_invalid_constructor_opts();
+            break;
+    }
+}
 
+Quaternion::Quaternion(const double * data, ConstructorOptions opt) {
+    data_ = new double[4];
+    scalar_ = data_;
+    vector_ = data_ + 1;
+
+    switch (opt) {
+        case QuaternionData:
+            memcpy(data_, data, 4 * sizeof (double));
+            break;
+        case EulerAngleData:
+        {
+            memcpy(data_, eulerToQuaternion(data).data_, 4 * sizeof (double));
             break;
         }
         default:
@@ -154,16 +172,8 @@ Quaternion Quaternion::operator*(const double gam) const {
     return Quaternion(newdata);
 }
 
-double* Quaternion::rotate3vector(const double* f) {
-    if (isNormalized()) {
-        double* out = new double[3];
-        Quaternion fo = *this * Quaternion(0, f) * (this->conjugate());
-        memcpy(out, fo.vector_, 3 * sizeof (double));
-
-        return out;
-    } else {
-        throw quat_exc_not_normalized();
-    }
+double* Quaternion::rotateVector(const double* v) {
+    return rotateVector(v, *this);
 }
 
 // Overload -- Division by scalar
@@ -375,8 +385,39 @@ void Quaternion::print(void) {
 }
 
 double* Quaternion::toEulerAngles(void) {
-    // TODO: IMPLEMENT
-    double *euler = new double[3];
+    return quaternionToEuler(*this);
+}
 
-    return euler;
+Quaternion Quaternion::eulerToQuaternion(const double * data) {
+    double roll = data[1];
+    double pitch = data[2];
+    double yaw = data[3];
+
+    return eulerToQuaternion(roll, pitch, yaw);
+}
+
+Quaternion Quaternion::eulerToQuaternion(double roll, double pitch, double yaw) {
+    Quaternion qRoll(static_cast<double> (cos(roll / 2.0f)), static_cast<double> (sin(roll / 2.0f)), 0.0f, 0.0f);
+    Quaternion qPitch(static_cast<double> (cos(pitch / 2.0f)), 0.0f, static_cast<double> (sin(pitch / 2.0f)), 0.0f);
+    Quaternion qYaw(static_cast<double> (cos(yaw / 2.0f)), 0.0f, 0.0f, static_cast<double> (sin(yaw / 2.0f)));
+
+    return Quaternion(qRoll * qPitch * qYaw);
+}
+
+double* Quaternion::quaternionToEuler(const Quaternion& q) {
+    //TODO: implement
+
+    return nullptr;
+}
+
+double* Quaternion::rotateVector(const double* v, const Quaternion& q) {
+    if (q.isNormalized()) {
+        double* out = new double[3];
+        Quaternion fo = q * Quaternion(0, v) * q.conjugate();
+        memcpy(out, fo.getVector(), 3 * sizeof (double));
+        return out;
+    } else {
+        throw quat_exc_not_normalized();
+    }
+    return nullptr;
 }
