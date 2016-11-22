@@ -85,9 +85,6 @@ public:
     Quaternion inverse(void) const;
     Quaternion& normalize(void);
 
-    double* rotateVector(const double* v);
-    double* toEulerAngles(void);
-
     double getScalar(void) const { return *scalar_; }
     const double* getVector(void) const { return vector_; }
     const double* getData(void) const { return data_; }
@@ -104,12 +101,15 @@ public:
     std::string toString(void);
     void print(void);
     
+    static void rotateVector(const double*  vector_in, double* const vector_out, const Quaternion& q);
+    void rotateVector(const double* vector_in, double* const vector_out);
+    
+    static void quaternionToEuler(double* const vector_out, const Quaternion& q);
+    void toEulerAngles(double* const vector_out);
+    
     static Quaternion eulerToQuaternion(const double* euler);
     static Quaternion eulerToQuaternion(double roll, double pitch, double yaw);
-    static double* quaternionToEuler(const Quaternion& q);
-    
-    static double* rotateVector(const double*  v, const Quaternion& q);
-    
+
     static const Quaternion ZERO;
     static const Quaternion UNIT;
 

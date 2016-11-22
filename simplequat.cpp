@@ -25,7 +25,6 @@
 
 #include "simplequat.h"
 
-
 const Quaternion Quaternion::ZERO(0.0f, 0.0f, 0.0f, 0.0f);
 const Quaternion Quaternion::UNIT(1.0f, 0.0f, 0.0f, 0.0f);
 double Quaternion::TOLERANCE_ = 1E-8;
@@ -172,8 +171,8 @@ Quaternion Quaternion::operator*(const double gam) const {
     return Quaternion(newdata);
 }
 
-double* Quaternion::rotateVector(const double* v) {
-    return rotateVector(v, *this);
+void Quaternion::rotateVector(const double* vector_in, double* const vector_out) {
+    rotateVector(vector_in, vector_out, *this);
 }
 
 // Overload -- Division by scalar
@@ -384,8 +383,8 @@ void Quaternion::print(void) {
     std::cout << toString();
 }
 
-double* Quaternion::toEulerAngles(void) {
-    return quaternionToEuler(*this);
+void Quaternion::toEulerAngles(double* const vector_out) {
+    quaternionToEuler(vector_out, *this);
 }
 
 Quaternion Quaternion::eulerToQuaternion(const double * data) {
@@ -404,20 +403,15 @@ Quaternion Quaternion::eulerToQuaternion(double roll, double pitch, double yaw) 
     return Quaternion(qRoll * qPitch * qYaw);
 }
 
-double* Quaternion::quaternionToEuler(const Quaternion& q) {
+void Quaternion::quaternionToEuler(double* const vector_out, const Quaternion& q) {
     //TODO: implement
-
-    return nullptr;
 }
 
-double* Quaternion::rotateVector(const double* v, const Quaternion& q) {
+void Quaternion::rotateVector(const double* vec_in, double* const vec_out, const Quaternion& q) {
     if (q.isNormalized()) {
-        double* out = new double[3];
-        Quaternion fo = q * Quaternion(0, v) * q.conjugate();
-        memcpy(out, fo.getVector(), 3 * sizeof (double));
-        return out;
+        Quaternion fo = q * Quaternion(0, vec_in) * q.conjugate();
+        memcpy(vec_out, fo.getVector(), 3 * sizeof (double));
     } else {
         throw quat_exc_not_normalized();
     }
-    return nullptr;
 }
