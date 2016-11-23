@@ -30,9 +30,6 @@
 #include <iostream>
 #include <exception>
 #include <sstream>
-#include <string.h>
-#include <type_traits>
-#include <limits>
 
 #define NUMERICAL_TOLERANCE 1E-8
 
@@ -89,16 +86,18 @@ public:
     const double* getVector(void) const { return vector_; }
     const double* getData(void) const { return data_; }
 
+    void setScalar(double scalar) { *(this->scalar_) = scalar; }
+    void setVector(const double* vector);
+    void setData(const double* data);
+    
     double norm(void) const;
 
     bool isNormalized(void) const { return fabs(norm() - 1.0f) < TOLERANCE_; }
     bool isPure(void) const { return fabs(getScalar()) < TOLERANCE_; }
-
-    void setScalar(double scalar) { *(this->scalar_) = scalar; }
-    void setVector(const double* vector);
+    
     static void setNumericalTolerance(double tolerance) { TOLERANCE_ = fabs(tolerance); }
 
-    std::string toString(void);
+    const char* toString(void);
     void print(void);
     
     static void rotateVector(const double*  vector_in, double* const vector_out, const Quaternion& q);

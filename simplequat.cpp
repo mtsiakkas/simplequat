@@ -322,7 +322,7 @@ bool Quaternion::operator>=(const Quaternion& q) const {
     double norm_ = norm();
     double q_norm = q.norm();
 
-    return norm_ > q_norm || norm_ == q_norm;
+    return norm_ > q_norm || *this == q;
 }
 
 bool Quaternion::operator<(const Quaternion& q) const {
@@ -333,7 +333,7 @@ bool Quaternion::operator<=(const Quaternion& q) const {
     double norm_ = norm();
     double q_norm = q.norm();
 
-    return norm_ < q_norm || norm_ == q_norm;
+    return norm_ < q_norm || *this == q;
 }
 
 // Relaxed comparison function
@@ -367,7 +367,11 @@ void Quaternion::setVector(const double * vector) {
     memcpy(vector_, vector, 3 * sizeof (double));
 }
 
-std::string Quaternion::toString(void) {
+void Quaternion::setData(const double* data) {
+    memcpy(data_, data, 4 * sizeof (double));
+}
+
+const char* Quaternion::toString(void) {
     std::stringstream ss;
 
     ss << "[";
